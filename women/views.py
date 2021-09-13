@@ -1,6 +1,7 @@
 from django.http import HttpResponse, HttpResponseNotFound, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 
+from women.forms import *
 from women.models import *
 
 menu = [
@@ -28,7 +29,16 @@ def about(request):
 
 
 def addpage(request):
-    return HttpResponse("Добавление статьи")
+    if request.method == 'POST':
+        form = AddPostForm(request.POST, request.FILES)
+        if form.is_valid():
+            # print(form.cleaned_data)
+            # Women.objects.create(**form.cleaned_data)
+            form.save()
+            return redirect('home')
+    else:
+        form = AddPostForm()
+    return render(request, 'women/addpage.html', {'form': form, 'menu': menu, 'title': 'Добавление статьи'})
 
 
 def contact(request):
@@ -56,9 +66,9 @@ def show_post(request, post_slug):
     return render(request, 'women/post.html', context=context)
 
 
-def show_category(request, cat_slug):
-    posts = Women.objects.filter(cat__slug=cat_slug)
-    cat = Category.objects.get(slug=cat_slug)
+def show_category(request, cat_id):
+    posts = Women.objects.filter(cat_id=cat_id)
+
     if len(posts) == 0:
         raise Http404()
 
@@ -66,6 +76,23 @@ def show_category(request, cat_slug):
         'posts': posts,
         'menu': menu,
         'title': 'Отображение по рубрикам',
-        'cat_selected': cat.slug,
+        'cat_selected': cat_id,
     }
+
     return render(request, 'women/index.html', context=context)
+
+
+
+# def show_category(request, cat_slug):
+#     posts = Women.objects.filter(cat__slug=cat_slug)
+#     cat = Category.objects.get(slug=cat_slug)
+#     if len(posts) == 0:
+#         raise Http404()
+#
+#     context = {
+#         'posts': posts,
+#         'menu': menu,
+#         'title': 'Отображение по рубрикам',
+#         'cat_selected': cat.slug,
+#     }
+#     return render(request, 'women/index.html', context=context)
